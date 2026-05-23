@@ -356,8 +356,18 @@ export function calculateRiskScore({
 ## Önemli Notlar
 
 - `lib/supabase.ts` içinde server ve client için iki ayrı instance oluştur
-- Cron route'u `/api/cron/...` pattern'inde tut (Vercel tanır)
+- Cron route'u `/api/cron/...` pattern'inde tut
 - NASA FIRMS'ten gelen CSV'yi parse ederken `acq_date + acq_time + lat + lon` kombinasyonunu unique key olarak kullan
 - Harita tile'ları için CartoDB Dark Matter: `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png`
 - `react-leaflet` ve `leaflet` paketlerini birlikte kur, CSS'i `layout.tsx`'e import et
 - Tüm API key'leri `.env.local`'da tut, `NEXT_PUBLIC_` prefix'i olmayan değişkenler sadece server-side çalışır
+
+## Faz 1 — Deploy Kararları (Cloudflare Workers)
+
+- **Hosting:** Cloudflare Workers + Static Assets (Pages değil) — `@opennextjs/cloudflare` adapter
+- **Cron:** ayrı `cron-worker/` Worker, Cron Triggers ile her 3 saatte bir ana Worker'ın `/api/cron/update-fires` endpoint'ine `Bearer ${CRON_SECRET}` POST eder
+- **Domain:** `yanginradar.com` — Cloudflare Registrar (at-cost, ~$10/yıl)
+- **Build engine:** `next build --webpack` ZORUNLU. Next.js 16 default Turbopack'i, OpenNext Cloudflare adapter'ı henüz tam parse edemiyor; runtime'da `TypeError: components.ComponentMod.handler is not a function` döner. Webpack ile build edince OpenNext'in beklediği bundle formatı üretilir.
+- **NASA FIRMS endpoint:** country code `/TR/` artık desteklenmiyor; bbox kullan: `26,36,45,42` (west,south,east,north)
+- **Next.js 16 + Server Component'larda `dynamic(ssr: false)` yasak** — client-only bileşenleri `'use client'` wrapper içinden dynamic import et (bkz. [FireMapClient.tsx](components/map/FireMapClient.tsx))
+- **Env vars:** lokalde `.env.local`, üretimde Cloudflare Dashboard → Worker → Settings → Variables and Secrets (Secret tipinde — Dashboard'da maskelenir; Plaintext de çalışır ama açıkta görünür)
