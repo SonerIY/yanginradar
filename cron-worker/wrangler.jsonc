@@ -1,0 +1,16 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "yanginradar-cron",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-05-01",
+  "triggers": {
+    // Her 3 saatte bir UTC: 00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00
+    "crons": ["0 */3 * * *"]
+  },
+  "observability": {
+    "enabled": true
+  }
+  // TARGET_URL ve CRON_SECRET, Cloudflare Dashboard'da Worker secret olarak eklenecek:
+  //   wrangler secret put TARGET_URL --name yanginradar-cron
+  //   wrangler secret put CRON_SECRET --name yanginradar-cron
+}
