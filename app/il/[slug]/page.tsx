@@ -5,8 +5,9 @@ import FireMapClient from '@/components/map/FireMapClient'
 import Navbar from '@/components/ui/Navbar'
 import AdLeaderboard from '@/components/ads/AdLeaderboard'
 import AdSquare from '@/components/ads/AdSquare'
-import { IL_LIST, getIlBySlug } from '@/lib/il-data'
+import { IL_LIST, getIlBySlug, getNearbyIller } from '@/lib/il-data'
 import { createServerSupabaseClient } from '@/lib/supabase'
+import { formatSatellite } from '@/lib/firms'
 import { fetchCurrentWeather } from '@/lib/weather'
 import { riskFromWeather, riskColor, riskLabel } from '@/lib/risk'
 import type { FirePoint } from '@/types'
@@ -222,8 +223,15 @@ export default async function IlPage({
             </h2>
           </header>
           {ilData.fires7d.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-[#64645f]">
-              Son 7 günde aktif tespit yok.
+            <div className="px-6 py-10 text-center">
+              <div className="text-2xl mb-2">🌲</div>
+              <div className="text-base font-bold text-[#30c7a4] mb-1">
+                Sevindirici haber — son 7 günde aktif tespit yok
+              </div>
+              <div className="text-xs text-[#a3a09a] max-w-md mx-auto leading-relaxed">
+                NASA uydusu {il.name} bölgesinde son bir haftadır yangın benzeri bir ısı
+                kaynağı saptamadı. Yine de kuru ve rüzgârlı günlerde dikkatli olun.
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -248,7 +256,7 @@ export default async function IlPage({
                         <td className="px-4 py-2 text-[#a3a09a]">
                           {fire.lat.toFixed(3)}, {fire.lon.toFixed(3)}
                         </td>
-                        <td className="px-4 py-2 text-[#a3a09a]">{fire.satellite}</td>
+                        <td className="px-4 py-2 text-[#a3a09a]">{formatSatellite(fire.satellite)}</td>
                         <td className="px-4 py-2 text-right text-[#f4f2ec]">
                           {fire.frp?.toFixed?.(1) ?? '—'}
                         </td>
@@ -273,13 +281,12 @@ export default async function IlPage({
         </section>
 
         {/* SEO için açıklayıcı metin */}
-        <section className="mt-8 prose prose-invert max-w-none text-sm leading-relaxed">
+        <section className="mt-8 text-sm leading-relaxed">
           <h2 className="text-lg font-bold text-[#f4f2ec] mb-3">
             {il.name} için yangın takibi nasıl yapılır?
           </h2>
           <p className="text-[#a3a09a]">
-            YangınRadar, {il.name} ilindeki aktif orman yangınlarını NASA&apos;nın VIIRS_SNPP_NRT
-            uydusundan gelen near real-time veri ile her 3 saatte bir günceller. Yukarıdaki harita
+            YangınRadar, {il.name} ilindeki aktif orman yangınlarını NASA&apos;nın <strong className="text-[#f4f2ec]">VIIRS uydusu (Suomi NPP)</strong> üzerinden gelen yaklaşık gerçek-zamanlı ısı verisi ile her 3 saatte bir günceller. Yukarıdaki harita
             ve tablo, son 7 günde {il.name} bölgesinde tespit edilen ısı kaynaklarını gösterir.
             Yüksek güvenli (kırmızı) tespitler genellikle gerçek bir orman yangınına işaret eder;
             orta güvenli (turuncu) tespitler ise endüstriyel ısı kaynakları, anız yangınları veya
@@ -287,12 +294,64 @@ export default async function IlPage({
           </p>
           <p className="text-[#a3a09a] mt-2">
             Risk skoru, mevcut sıcaklık ({weather?.temperature.toFixed(0) ?? '—'}°C), nem (%
-            {weather?.humidity.toFixed(0) ?? '—'}) ve rüzgar hızı (
+            {weather?.humidity.toFixed(0) ?? '—'}) ve rüzgâr hızı (
             {weather?.windSpeed ? (weather.windSpeed * 3.6).toFixed(0) : '—'} km/s) kullanılarak
             hesaplanır. Yangın çıkma ihtimali yüksek günlerde dışarıda ateş yakmaktan kaçının,
-            şüpheli durumları <strong>112</strong> veya <strong>177</strong>{' '}
+            şüpheli durumları <strong className="text-[#E24B4A]">112</strong> veya <strong className="text-[#E24B4A]">177</strong>{' '}
             (Orman Yangını İhbar Hattı) numaralarına bildirin.
           </p>
+        </section>
+
+        {/* Komşu iller + İpuçları */}
+        <section className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Komşu iller */}
+          <div className="bg-[#262624] border border-[#3f3f3c] rounded-lg p-4">
+            <h3 className="text-sm font-extrabold text-[#f4f2ec] uppercase mb-3">
+              Komşu illerde durum
+            </h3>
+            <ul className="space-y-2">
+              {getNearbyIller(il.slug, 5).map((nb) => (
+                <li key={nb.slug}>
+                  <Link
+                    href={`/il/${nb.slug}`}
+                    className="flex items-center justify-between px-2 py-2 rounded hover:bg-[#30302d] transition"
+                  >
+                    <span className="text-sm font-bold text-[#f4f2ec]">{nb.name}</span>
+                    <span className="text-xs text-[#a3a09a]">Detay →</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* İpuçları */}
+          <div className="bg-[#262624] border border-[#3f3f3c] rounded-lg p-4">
+            <h3 className="text-sm font-extrabold text-[#f4f2ec] uppercase mb-3">
+              Yangına karşı 5 ipucu
+            </h3>
+            <ol className="space-y-2 text-sm text-[#a3a09a]">
+              <li className="flex gap-2">
+                <span className="text-[#EF9F27] font-bold">1.</span>
+                Orman alanlarına yakın yerlerde sigara izmaritlerini söndürmeden atmayın.
+              </li>
+              <li className="flex gap-2">
+                <span className="text-[#EF9F27] font-bold">2.</span>
+                Anız yakma yasaktır; bahçe atıklarını gömerek imha edin.
+              </li>
+              <li className="flex gap-2">
+                <span className="text-[#EF9F27] font-bold">3.</span>
+                Piknik ateşini taşla çevrili alanda yakın, ayrılırken suyla söndürün.
+              </li>
+              <li className="flex gap-2">
+                <span className="text-[#EF9F27] font-bold">4.</span>
+                Cam, plastik ve metal parçalarını ormanda bırakmayın (mercek etkisi).
+              </li>
+              <li className="flex gap-2">
+                <span className="text-[#EF9F27] font-bold">5.</span>
+                Bir duman ya da alev gördüğünüzde derhal <strong className="text-[#E24B4A]">177</strong>&apos;yi arayın.
+              </li>
+            </ol>
+          </div>
         </section>
       </div>
     </main>

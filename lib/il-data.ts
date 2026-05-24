@@ -87,3 +87,26 @@ export const IL_LIST: IlData[] = [
 export function getIlBySlug(slug: string): IlData | undefined {
   return IL_LIST.find((il) => il.slug === slug)
 }
+
+function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLon = ((lon2 - lon1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+/** Verilen ilin koordinatına en yakın N ili döner (kendisi hariç). */
+export function getNearbyIller(slug: string, count = 4): IlData[] {
+  const center = getIlBySlug(slug)
+  if (!center) return []
+  return IL_LIST.filter((il) => il.slug !== slug)
+    .map((il) => ({ il, dist: haversine(center.lat, center.lon, il.lat, il.lon) }))
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, count)
+    .map(({ il }) => il)
+}

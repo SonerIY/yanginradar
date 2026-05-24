@@ -89,6 +89,38 @@ export function haversine(lat1: number, lon1: number, lat2: number, lon2: number
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
+/** NASA FIRMS CSV'sinin "satellite" sütunundaki kısa kodu kullanıcı dostu isme çevirir. */
+export function formatSatellite(raw: string | undefined): string {
+  if (!raw) return 'VIIRS'
+  const v = raw.trim().toUpperCase()
+  switch (v) {
+    case 'N':
+    case 'NPP':
+    case 'NPP-1':
+    case 'SNPP':
+    case '1':
+      return 'VIIRS · Suomi NPP'
+    case 'N20':
+    case 'NOAA20':
+    case 'NOAA-20':
+    case 'JPSS-1':
+      return 'VIIRS · NOAA-20'
+    case 'N21':
+    case 'NOAA21':
+    case 'NOAA-21':
+    case 'JPSS-2':
+      return 'VIIRS · NOAA-21'
+    case 'T':
+    case 'TERRA':
+      return 'MODIS · Terra'
+    case 'A':
+    case 'AQUA':
+      return 'MODIS · Aqua'
+    default:
+      return `VIIRS · ${raw}`
+  }
+}
+
 export function reverseGeocode(
   lat: number,
   lon: number,

@@ -6,6 +6,7 @@ import MarkerClusterGroup from 'react-leaflet-cluster'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { FirePoint } from '@/types'
+import { formatSatellite } from '@/lib/firms'
 
 export interface WindPoint {
   lat: number
@@ -38,14 +39,31 @@ interface Props {
 function windArrowIcon(speed: number, direction: number, ilName?: string): L.DivIcon {
   // Meteorological "geldiği yön" → gittiği yön için 180° döndür
   const rotation = (direction + 180) % 360
-  const opacity = Math.min(0.35 + speed * 0.06, 0.95)
+  const opacity = Math.min(0.4 + speed * 0.06, 0.95)
   const stroke = speed >= 8 ? '#E24B4A' : speed >= 4 ? '#EF9F27' : '#9bc5e8'
+  // Hız arttıkça çizgi uzar; min 22px, max 48px
+  const len = Math.min(22 + speed * 2.6, 48)
+  // Çizgi ortalanır; SVG tam ekran içinde ortada
+  const width = 56
+  const height = 12
+  const cy = height / 2
+  const x1 = (width - len) / 2
+  const x2 = x1 + len
 
   const html = `
-    <div style="transform: rotate(${rotation}deg); transform-origin: center;" title="${ilName ?? ''} ${speed.toFixed(0)} m/s">
-      <svg width="22" height="22" viewBox="0 0 22 22" style="opacity: ${opacity};">
-        <line x1="11" y1="20" x2="11" y2="4" stroke="${stroke}" stroke-width="2" stroke-linecap="round"/>
-        <polyline points="6,9 11,3 16,9" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <div style="transform: rotate(${rotation - 90}deg); transform-origin: center; opacity: ${opacity};" title="${ilName ?? ''} · ${speed.toFixed(1)} m/s">
+      <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="overflow: visible;">
+        <line
+          class="wind-flow-line"
+          x1="${x1}" y1="${cy}" x2="${x2}" y2="${cy}"
+          stroke="${stroke}" stroke-width="1.6"
+          stroke-dasharray="8 6" stroke-linecap="round"
+        />
+        <polyline
+          points="${x2 - 5},${cy - 3} ${x2},${cy} ${x2 - 5},${cy + 3}"
+          fill="none" stroke="${stroke}" stroke-width="1.6"
+          stroke-linecap="round" stroke-linejoin="round"
+        />
       </svg>
     </div>
   `
@@ -53,8 +71,8 @@ function windArrowIcon(speed: number, direction: number, ilName?: string): L.Div
   return L.divIcon({
     html,
     className: 'wind-arrow-icon',
-    iconSize: [22, 22],
-    iconAnchor: [11, 11],
+    iconSize: [width, height],
+    iconAnchor: [width / 2, height / 2],
   })
 }
 
@@ -140,7 +158,7 @@ export default function FireMap({
                     <strong>Tarih:</strong> {formatDateTime(fire.acq_date, fire.acq_time)}
                   </div>
                   <div>
-                    <strong>Uydu:</strong> {fire.satellite}
+                    <strong>Uydu:</strong> {formatSatellite(fire.satellite)}
                   </div>
                   <div>
                     <strong>FRP:</strong> {fire.frp?.toFixed?.(1) ?? fire.frp} MW
