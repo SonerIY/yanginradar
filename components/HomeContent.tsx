@@ -1,9 +1,8 @@
 import HomeShell from './HomeShell'
 import { createServerSupabaseClient } from '@/lib/supabase'
-import { fetchBulkCurrentWeather } from '@/lib/weather'
 import { getCountryWideFireNews } from '@/lib/news-server'
 import { IL_LIST } from '@/lib/il-data'
-import type { FirePoint, WeatherData } from '@/types'
+import type { FirePoint } from '@/types'
 import type { WindPoint } from './map/FireMap'
 import type { IlSummary } from './map/IlBoundariesLayer'
 
@@ -13,6 +12,10 @@ interface RegionStatRow {
   fire_count_today: number
   fire_count_week: number
   risk_score: number
+  temperature: number | null
+  humidity: number | null
+  wind_speed: number | null
+  wind_direction: number | null
 }
 
 async function fetchFiresFromSupabase(): Promise<{
@@ -67,7 +70,9 @@ async function fetchRegionStats(): Promise<Record<string, RegionStatRow>> {
     const supabase = createServerSupabaseClient()
     const { data } = await supabase
       .from('region_stats')
-      .select('il_slug, il_name, fire_count_today, fire_count_week, risk_score')
+      .select(
+        'il_slug, il_name, fire_count_today, fire_count_week, risk_score, temperature, humidity, wind_speed, wind_direction',
+      )
     const map: Record<string, RegionStatRow> = {}
     for (const row of (data ?? []) as RegionStatRow[]) {
       map[row.il_slug] = row
@@ -79,31 +84,33 @@ async function fetchRegionStats(): Promise<Record<string, RegionStatRow>> {
 }
 
 function buildIlSummaryMap(
-  weather: Array<WeatherData | null>,
   regionStats: Record<string, RegionStatRow>,
 ): { ilStats: Record<string, IlSummary>; windPoints: WindPoint[] } {
   const ilStats: Record<string, IlSummary> = {}
   const windPoints: WindPoint[] = []
-  for (let i = 0; i < IL_LIST.length; i++) {
-    const il = IL_LIST[i]
-    const w = weather[i]
+  for (const il of IL_LIST) {
     const stat = regionStats[il.slug]
+    const temp = stat?.temperature != null ? Number(stat.temperature) : undefined
+    const hum = stat?.humidity != null ? Number(stat.humidity) : undefined
+    const wsp = stat?.wind_speed != null ? Number(stat.wind_speed) : undefined
+    const wdir = stat?.wind_direction != null ? Number(stat.wind_direction) : undefined
+
     ilStats[il.slug] = {
       slug: il.slug,
       name: il.name,
       fireCountToday: stat?.fire_count_today ?? 0,
       fireCountWeek: stat?.fire_count_week ?? 0,
       riskScore: stat?.risk_score ?? 0,
-      temperature: w?.temperature,
-      humidity: w?.humidity,
-      windSpeed: w?.windSpeed,
+      temperature: temp,
+      humidity: hum,
+      windSpeed: wsp,
     }
-    if (w) {
+    if (wsp !== undefined && wdir !== undefined) {
       windPoints.push({
         lat: il.lat,
         lon: il.lon,
-        speed: w.windSpeed,
-        direction: w.windDirection,
+        speed: wsp,
+        direction: wdir,
         ilName: il.name,
       })
     }
@@ -116,14 +123,13 @@ function buildIlSummaryMap(
  * yüklenirken üst seviye HomeContentSkeleton görünür.
  */
 export default async function HomeContent() {
-  const [{ today, yesterdayCount }, weather, regionStats, countryNews] = await Promise.all([
+  const [{ today, yesterdayCount }, regionStats, countryNews] = await Promise.all([
     fetchFiresFromSupabase(),
-    fetchBulkCurrentWeather(IL_LIST.map((il) => ({ lat: il.lat, lon: il.lon }))),
     fetchRegionStats(),
     getCountryWideFireNews(6),
   ])
 
-  const { ilStats, windPoints } = buildIlSummaryMap(weather, regionStats)
+  const { ilStats, windPoints } = buildIlSummaryMap(regionStats)
   const totalFires = today.length
   const affectedIl = new Set(today.map((f) => f.il_slug).filter(Boolean)).size
   const diff = totalFires - yesterdayCount

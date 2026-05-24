@@ -107,6 +107,12 @@ async function handle(request: Request) {
           fire_count_today: todayFires,
           fire_count_week: weekCount[il.slug] ?? 0,
           risk_score: riskFromWeather(weather, todayFires),
+          // Hava verisini DB'ye yaz ki sayfa her isteğinde Open-Meteo'ya
+          // gidip 429 yemesin. Cron 3 saatte bir taze hava çeker.
+          temperature: weather?.temperature ?? null,
+          humidity: weather?.humidity ?? null,
+          wind_speed: weather?.windSpeed ?? null,
+          wind_direction: weather?.windDirection ?? null,
           updated_at: new Date().toISOString(),
         }
       })
