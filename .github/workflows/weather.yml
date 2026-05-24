@@ -1,0 +1,31 @@
+name: Weather refresh
+
+# Open-Meteo'yu Cloudflare Workers'tan değil GitHub runner'ından çek
+# (Cloudflare çıkış IP'leri rate-limit'li; GitHub IP'leri serbest).
+# Veriyi Supabase region_stats'a yazar; ana sayfa DB'den okur, hep dolu.
+
+on:
+  schedule:
+    - cron: '15 */3 * * *' # her 3 saatte bir, NASA cron'undan 15 dk sonra
+  workflow_dispatch: # manuel tetikleme için (Actions sekmesinde "Run workflow" butonu)
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install @supabase/supabase-js
+        run: npm install --no-save @supabase/supabase-js@2
+
+      - name: Refresh weather
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/refresh-weather.mjs
