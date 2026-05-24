@@ -10,8 +10,15 @@
   },
   "observability": {
     "enabled": true
-  }
-  // Environment variables (FIRMS_MAP_KEY, SUPABASE_*, CRON_SECRET) Cloudflare
-  // dashboard'dan "Worker > Settings > Variables and Secrets" altında eklenecek.
+  },
+  "kv_namespaces": [
+    {
+      "binding": "NEWS_CACHE",
+      "id": "a99ab4ebed0d46cb8dbeba4d4ce0c2df"
+    }
+  ]
+  // Environment variables (FIRMS_MAP_KEY, SUPABASE_*, CRON_SECRET,
+  // NEXT_PUBLIC_GSC_VERIFICATION) Cloudflare dashboard'dan
+  // "Worker > Settings > Variables and Secrets" altında eklenecek.
   // Yerelde .dev.vars dosyası kullanılır (git'e gitmez).
 }

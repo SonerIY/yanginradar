@@ -9,6 +9,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://yanginradar.com'),
   title: 'YangınRadar — Türkiye Orman Yangını Takip Sistemi',
   description:
     'Türkiye genelindeki aktif orman yangınlarını NASA FIRMS uydu verisiyle gerçek zamanlı takip edin.',
@@ -17,6 +18,17 @@ export const metadata: Metadata = {
     description: 'Türkiye orman yangınları canlı uydu takibi',
     type: 'website',
     locale: 'tr_TR',
+    url: 'https://yanginradar.com',
+    siteName: 'YangınRadar',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'YangınRadar',
+    description: 'Türkiye orman yangınları canlı uydu takibi',
+  },
+  alternates: { canonical: 'https://yanginradar.com' },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GSC_VERIFICATION,
   },
 }
 
