@@ -10,6 +10,8 @@ import { createServerSupabaseClient } from '@/lib/supabase'
 import { formatSatellite } from '@/lib/firms'
 import { fetchCurrentWeather } from '@/lib/weather'
 import { riskFromWeather, riskColor, riskLabel } from '@/lib/risk'
+import { getIlNews } from '@/lib/news-server'
+import NewsList from '@/components/news/NewsList'
 import type { FirePoint } from '@/types'
 
 export const revalidate = 600 // 10 dk cache
@@ -103,6 +105,10 @@ export default async function IlPage({
     fetchIlData(il.slug),
     fetchCurrentWeather(il.lat, il.lon),
   ])
+
+  // News'i ilData.weekCount'a göre tetikle (aktif yangın yoksa fetch atılmaz,
+  // sadece varolan arşivden okunur)
+  const news = await getIlNews(il.slug, ilData.weekCount, 8)
 
   const risk = riskFromWeather(weather, ilData.todayCount)
   const rColor = riskColor(risk)
@@ -301,6 +307,31 @@ export default async function IlPage({
             (Orman Yangını İhbar Hattı) numaralarına bildirin.
           </p>
         </section>
+
+        {/* Yerel Haberler — sadece arşivde veya canlı sonuç varsa */}
+        {news.length > 0 && (
+          <section className="mt-8 bg-[#262624] border border-[#3f3f3c] rounded-lg overflow-hidden">
+            <header className="px-4 py-3 border-b border-[#3f3f3c] flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-extrabold text-[#f4f2ec] uppercase">
+                  📰 {il.name} Yangın Haberleri
+                </h2>
+                <div className="text-xs text-[#a3a09a] mt-1">
+                  Google News · son 30 günden
+                </div>
+              </div>
+              {ilData.todayCount > 0 && (
+                <span className="text-[10px] uppercase font-extrabold px-2 py-1 rounded bg-[#E24B4A]/20 text-[#E24B4A] border border-[#E24B4A]/40">
+                  ● Canlı
+                </span>
+              )}
+            </header>
+            <NewsList items={news} />
+            <div className="px-4 py-2 text-[10px] text-[#64645f] border-t border-[#3f3f3c]">
+              Haberler üçüncü taraf kaynaklardan alınmıştır; içerikten YangınRadar sorumlu değildir.
+            </div>
+          </section>
+        )}
 
         {/* Komşu iller + İpuçları */}
         <section className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">

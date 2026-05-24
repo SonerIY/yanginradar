@@ -3,6 +3,7 @@ import AdLeaderboard from '@/components/ads/AdLeaderboard'
 import HomeShell from '@/components/HomeShell'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import { fetchBulkCurrentWeather } from '@/lib/weather'
+import { getCountryWideFireNews } from '@/lib/news-server'
 import { IL_LIST } from '@/lib/il-data'
 import type { FirePoint, WeatherData } from '@/types'
 import type { WindPoint } from '@/components/map/FireMap'
@@ -125,10 +126,11 @@ function formatUpdated(): string {
 }
 
 export default async function HomePage() {
-  const [{ today, yesterdayCount }, weather, regionStats] = await Promise.all([
+  const [{ today, yesterdayCount }, weather, regionStats, countryNews] = await Promise.all([
     fetchFiresFromSupabase(),
     fetchBulkCurrentWeather(IL_LIST.map((il) => ({ lat: il.lat, lon: il.lon }))),
     fetchRegionStats(),
+    getCountryWideFireNews(6),
   ])
 
   const { ilStats, windPoints } = buildIlSummaryMap(weather, regionStats)
@@ -145,6 +147,7 @@ export default async function HomePage() {
         fires={today}
         windPoints={windPoints}
         ilStats={ilStats}
+        countryNews={countryNews}
         totalFires={totalFires}
         affectedIl={affectedIl}
         diff={diff}

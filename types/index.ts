@@ -42,3 +42,12 @@ export interface PushSubscriptionRecord {
   il_slug?: string | null
   il_name?: string | null
 }
+
+export interface NewsItem {
+  title: string
+  link: string
+  source: string
+  pubDate: string    // ISO 8601
+  snippet: string
+  imageUrl?: string
+}

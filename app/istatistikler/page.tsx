@@ -3,7 +3,9 @@ import Link from 'next/link'
 import Navbar from '@/components/ui/Navbar'
 import AdLeaderboard from '@/components/ads/AdLeaderboard'
 import Last30DaysChart from '@/components/charts/Last30DaysChart'
+import NewsList from '@/components/news/NewsList'
 import { createServerSupabaseClient } from '@/lib/supabase'
+import { getRecentArchivedNews } from '@/lib/news-server'
 
 export const revalidate = 600
 
@@ -123,7 +125,10 @@ async function fetchStats(): Promise<AggregateStats> {
 }
 
 export default async function StatsPage() {
-  const stats = await fetchStats()
+  const [stats, recentNews] = await Promise.all([
+    fetchStats(),
+    getRecentArchivedNews(6),
+  ])
   const diff = stats.thisWeek - stats.lastWeek
   const diffPct = stats.lastWeek > 0 ? Math.round((diff / stats.lastWeek) * 100) : 0
   const diffPositive = diff > 0
@@ -267,6 +272,21 @@ export default async function StatsPage() {
             </div>
           </section>
         </div>
+
+        {/* Bu hafta öne çıkan haberler — Supabase arşivinden */}
+        {recentNews.length > 0 && (
+          <section className="mt-6 bg-[#262624] border border-[#3f3f3c] rounded-lg overflow-hidden">
+            <header className="px-4 py-3 border-b border-[#3f3f3c]">
+              <h2 className="text-sm font-extrabold text-[#f4f2ec] uppercase">
+                📰 Son Eklenen Haberler
+              </h2>
+              <div className="text-xs text-[#a3a09a] mt-1">
+                Tüm illerin arşivinden en yeni 6 haber
+              </div>
+            </header>
+            <NewsList items={recentNews} max={6} />
+          </section>
+        )}
       </div>
     </main>
   )

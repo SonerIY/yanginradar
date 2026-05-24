@@ -5,7 +5,8 @@ import FireMapClient from './map/FireMapClient'
 import StatsPanel from './sidebar/StatsPanel'
 import AlertList from './sidebar/AlertList'
 import AdSquare from './ads/AdSquare'
-import type { FirePoint } from '@/types'
+import NewsList from './news/NewsList'
+import type { FirePoint, NewsItem } from '@/types'
 import type { WindPoint } from './map/FireMap'
 import type { IlSummary } from './map/IlBoundariesLayer'
 
@@ -13,6 +14,7 @@ interface Props {
   fires: FirePoint[]
   windPoints: WindPoint[]
   ilStats: Record<string, IlSummary>
+  countryNews: NewsItem[]
   totalFires: number
   affectedIl: number
   diff: number
@@ -22,6 +24,7 @@ export default function HomeShell({
   fires,
   windPoints,
   ilStats,
+  countryNews,
   totalFires,
   affectedIl,
   diff,
@@ -58,6 +61,16 @@ export default function HomeShell({
           <div className="border-t border-[#3f3f3c]">
             <AdSquare />
           </div>
+
+          {countryNews.length > 0 && (
+            <div className="border-t border-[#3f3f3c]">
+              <header className="px-3 py-2 text-[11px] uppercase font-extrabold text-[#a3a09a] flex items-center justify-between">
+                <span>📰 Türkiye Geneli</span>
+                <span className="text-[10px] text-[#64645f] normal-case font-normal">Google News</span>
+              </header>
+              <NewsList items={countryNews} compact max={4} />
+            </div>
+          )}
 
           <div className="border-t border-[#3f3f3c] lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
             <AlertList fires={fires} />
