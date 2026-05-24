@@ -49,7 +49,7 @@ export async function fetchCurrentWeather(lat: number, lon: number): Promise<Wea
  */
 export async function fetchBulkCurrentWeather(
   points: Array<{ lat: number; lon: number }>,
-  timeoutMs = 3000,
+  timeoutMs = 8000,
 ): Promise<Array<WeatherData | null>> {
   if (points.length === 0) return []
 
@@ -65,8 +65,15 @@ export async function fetchBulkCurrentWeather(
   const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
-    if (!res.ok) return points.map(() => null)
+    // Next.js fetch cache (15dk) — SSG/ISR uyumu için
+    const res = await fetch(url, {
+      next: { revalidate: 900 },
+      signal: controller.signal,
+    })
+    if (!res.ok) {
+      console.error('[bulk-weather] non-ok:', res.status, res.statusText)
+      return points.map(() => null)
+    }
     const data = await res.json()
     const arr = Array.isArray(data) ? data : [data]
     return points.map((_, i) => {
@@ -79,7 +86,9 @@ export async function fetchBulkCurrentWeather(
         windDirection: item.winddirection_10m,
       }
     })
-  } catch {
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[bulk-weather] error:', msg)
     return points.map(() => null)
   } finally {
     clearTimeout(timer)
