@@ -7,6 +7,7 @@ import AlertList from './sidebar/AlertList'
 import AdSquare from './ads/AdSquare'
 import FilterDropdown from './ui/FilterDropdown'
 import NewsList from './news/NewsList'
+import SubscribeButton from './notifications/SubscribeButton'
 import type { FirePoint, NewsItem } from '@/types'
 import type { WindPoint } from './map/FireMap'
 import type { IlSummary } from './map/IlBoundariesLayer'
@@ -116,12 +117,7 @@ export default function HomeShell({
           </div>
 
           <div className="border-t border-[#3f3f3c] p-3">
-            <button
-              type="button"
-              className="w-full min-h-11 text-[#f4f2ec] bg-transparent border border-[#64645f] rounded-lg font-extrabold hover:bg-[#30302d]"
-            >
-              ♧ Bildirim aboneliği (yakında)
-            </button>
+            <SubscribeButton />
           </div>
         </aside>
       </div>
