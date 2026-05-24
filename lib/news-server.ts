@@ -1,4 +1,7 @@
-import 'server-only'
+// Bu modül yalnız server tarafında kullanılır (Supabase service role + RSS fetch).
+// 'server-only' paketi Cloudflare Workers runtime'ında bazı edge case'lerde
+// patlattığı için kaldırıldı; client'tan import edilmesi build-time'da next
+// tarafından zaten engelleniyor (createServerSupabaseClient server-only).
 import { createServerSupabaseClient } from '@/lib/supabase'
 import { fetchNews, fetchNewsForIl, buildIlSearchQuery } from '@/lib/news'
 import { getIlBySlug } from '@/lib/il-data'

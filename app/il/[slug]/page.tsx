@@ -13,7 +13,7 @@ import { riskFromWeather, riskColor, riskLabel } from '@/lib/risk'
 import { getIlNews } from '@/lib/news-server'
 import NewsList from '@/components/news/NewsList'
 import AdInArticle from '@/components/ads/AdInArticle'
-import type { FirePoint } from '@/types'
+import type { FirePoint, NewsItem } from '@/types'
 
 export const revalidate = 600 // 10 dk cache
 
@@ -108,8 +108,14 @@ export default async function IlPage({
   ])
 
   // News'i ilData.weekCount'a göre tetikle (aktif yangın yoksa fetch atılmaz,
-  // sadece varolan arşivden okunur)
-  const news = await getIlNews(il.slug, ilData.weekCount, 8)
+  // sadece varolan arşivden okunur). Hata olursa sayfa news bölümü olmadan
+  // render olur — il sayfası asla 500 dönmemeli.
+  let news: NewsItem[] = []
+  try {
+    news = await getIlNews(il.slug, ilData.weekCount, 8)
+  } catch (err) {
+    console.error('[il/' + il.slug + '] getIlNews error:', err)
+  }
 
   const risk = riskFromWeather(weather, ilData.todayCount)
   const rColor = riskColor(risk)

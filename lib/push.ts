@@ -1,4 +1,4 @@
-import 'server-only'
+// Server-only modül; client'tan import edilmemeli (web-push + service role).
 import webpush from 'web-push'
 import { createServerSupabaseClient } from '@/lib/supabase'
 
