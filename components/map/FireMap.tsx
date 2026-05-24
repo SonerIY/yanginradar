@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Popup, Marker } from 'react-leaflet'
+import { MapContainer, TileLayer, CircleMarker, Popup, Marker, AttributionControl } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
+import MapLegend from './MapLegend'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { FirePoint } from '@/types'
@@ -111,6 +112,7 @@ export default function FireMap({
       minZoom={minZoom}
       maxZoom={14}
       scrollWheelZoom
+      attributionControl={false}
       style={{ height: '100%', width: '100%', background: '#081421' }}
     >
       <TileLayer
@@ -118,6 +120,11 @@ export default function FireMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
         subdomains={['a', 'b', 'c', 'd']}
       />
+
+      {/* OSM + CARTO attribution zorunlu — sadece "Leaflet" prefix kaldırıldı */}
+      <AttributionControl position="bottomright" prefix={false} />
+
+      <MapLegend />
 
       {showBoundaries && ilStats && <IlBoundariesLayer ilStats={ilStats} />}
 
