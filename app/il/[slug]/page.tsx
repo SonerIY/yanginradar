@@ -134,7 +134,7 @@ export default async function IlPage({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Sol: Mini harita */}
           <section className="lg:col-span-2 bg-[#262624] border border-[#3f3f3c] rounded-lg overflow-hidden">
-            <div className="h-[420px]">
+            <div className="h-[55vh] min-h-[320px] lg:h-[420px]">
               <FireMapClient fires={ilData.fires7d} center={[il.lat, il.lon]} zoom={9} minZoom={7} />
             </div>
             <div className="px-4 py-3 border-t border-[#3f3f3c] text-xs text-[#a3a09a]">

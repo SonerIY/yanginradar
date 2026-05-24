@@ -191,6 +191,45 @@
   color: #64645f;
 }
 
+/* Mobil popup wrapper'ı — aynı tema */
+.leaflet-popup.ilr-popup-wrap .leaflet-popup-content-wrapper {
+  background: #1a1a18 !important;
+  color: #f4f2ec !important;
+  border: 1px solid #3f3f3c !important;
+  border-radius: 8px !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  padding: 0 !important;
+}
+.leaflet-popup.ilr-popup-wrap .leaflet-popup-content {
+  margin: 10px 12px !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+  min-width: 180px;
+}
+.leaflet-popup.ilr-popup-wrap .leaflet-popup-tip {
+  background: #1a1a18 !important;
+  border: 1px solid #3f3f3c !important;
+}
+.leaflet-popup.ilr-popup-wrap a.leaflet-popup-close-button {
+  color: #a3a09a !important;
+  padding: 6px 8px 0 0 !important;
+}
+.ilr-popup-link {
+  display: block;
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #E24B4A;
+  color: #fff !important;
+  text-align: center;
+  font-weight: 800;
+  border-radius: 6px;
+  text-decoration: none !important;
+}
+.ilr-popup-link:hover {
+  background: #c43e3d;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

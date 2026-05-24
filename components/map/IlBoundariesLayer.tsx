@@ -27,7 +27,6 @@ interface Props {
   ilStats: Record<string, IlSummary>
 }
 
-// GeoJSON ad → bizim slug eşleştirme
 const NAME_TO_SLUG_OVERRIDES: Record<string, string> = {
   Afyon: 'afyonkarahisar',
 }
@@ -49,18 +48,16 @@ function geoNameToSlug(name: string): string {
   return turkishNormalize(name)
 }
 
-function buildTooltipHtml(s: IlSummary | undefined, fallbackName: string): string {
+function tooltipBody(s: IlSummary | undefined, fallbackName: string): string {
   if (!s) {
     return `<div class="ilr-tooltip"><strong>${fallbackName}</strong><div class="ilr-row ilr-muted">Veri yok</div></div>`
   }
   const rColor = riskColor(s.riskScore)
   const rLab = riskLabel(s.riskScore)
-
   const todayLine =
     s.fireCountToday > 0
       ? `<span class="ilr-fire">${s.fireCountToday} aktif tespit</span>`
       : `<span class="ilr-clear">temiz</span>`
-
   const weatherLine =
     s.temperature !== undefined
       ? `${s.temperature.toFixed(0)}°C · %${s.humidity?.toFixed(0) ?? '—'} nem · ${s.windSpeed?.toFixed(1) ?? '—'} m/s`
@@ -76,9 +73,19 @@ function buildTooltipHtml(s: IlSummary | undefined, fallbackName: string): strin
         <strong style="color:${rColor};">${s.riskScore}/100 · ${rLab}</strong>
       </div>
       <div class="ilr-row ilr-weather">${weatherLine}</div>
-      <div class="ilr-foot">Tıkla →</div>
     </div>
   `
+}
+
+function popupBody(s: IlSummary | undefined, fallbackName: string, slug: string): string {
+  const body = tooltipBody(s, fallbackName)
+  // Mobil popup içine sayfa linki ekleniyor — tooltip versiyonunda yok
+  return body.replace(
+    '</div>\n    </div>',
+    `</div>
+      <a href="/il/${slug}" class="ilr-popup-link">Detayları gör →</a>
+    </div>`,
+  )
 }
 
 function getFeatureStyle(slug: string, ilStats: Record<string, IlSummary>) {
@@ -93,7 +100,6 @@ function getFeatureStyle(slug: string, ilStats: Record<string, IlSummary>) {
     }
   }
   const fillColor = riskColor(s.riskScore)
-  // Risk skoruna göre dolgu opaklığı (düşük risk → çok hafif tint)
   const fillOpacity = 0.05 + Math.min(s.riskScore / 100, 1) * 0.32
   return {
     color: '#555550',
@@ -107,6 +113,11 @@ function getFeatureStyle(slug: string, ilStats: Record<string, IlSummary>) {
 export default function IlBoundariesLayer({ ilStats }: Props) {
   const router = useRouter()
   const [data, setData] = useState<FeatureCollection | null>(null)
+  // Dokunmatik cihaz tespiti — hem L.Browser.mobile hem media query
+  const isTouch =
+    typeof window !== 'undefined' &&
+    (L.Browser.mobile ||
+      window.matchMedia('(hover: none) and (pointer: coarse)').matches)
 
   useEffect(() => {
     let cancelled = false
@@ -136,37 +147,48 @@ export default function IlBoundariesLayer({ ilStats }: Props) {
         const slug = geoNameToSlug(fname)
         const summary = ilStats[slug]
 
-        const tooltip = L.tooltip({
-          direction: 'top',
-          sticky: true,
-          opacity: 1,
-          className: 'ilr-tooltip-wrap',
-        }).setContent(buildTooltipHtml(summary, fname))
-
-        layer.bindTooltip(tooltip)
-
-        layer.on('mouseover', (e: LeafletMouseEvent) => {
-          const l = e.target as L.Path
-          l.setStyle({
-            color: '#EF9F27',
-            weight: 1.6,
-            opacity: 1,
-            fillOpacity: Math.min(
-              (getFeatureStyle(slug, ilStats).fillOpacity as number) + 0.18,
-              0.95,
-            ),
+        if (isTouch) {
+          // Mobil: tap ile popup aç; popup içinde <a> ile sayfaya git
+          layer.bindPopup(popupBody(summary, fname, slug), {
+            className: 'ilr-popup-wrap',
+            closeButton: true,
+            autoPan: true,
+            maxWidth: 280,
           })
-          if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-            l.bringToFront()
-          }
-        })
-        layer.on('mouseout', (e: LeafletMouseEvent) => {
-          const l = e.target as L.Path
-          l.setStyle(getFeatureStyle(slug, ilStats))
-        })
-        layer.on('click', () => {
-          router.push(`/il/${slug}`)
-        })
+        } else {
+          // Desktop: hover tooltip + click → router navigate
+          const tooltip = L.tooltip({
+            direction: 'top',
+            sticky: true,
+            opacity: 1,
+            className: 'ilr-tooltip-wrap',
+          }).setContent(tooltipBody(summary, fname) + '<div class="ilr-foot">Tıkla →</div>')
+
+          layer.bindTooltip(tooltip)
+
+          layer.on('mouseover', (e: LeafletMouseEvent) => {
+            const l = e.target as L.Path
+            l.setStyle({
+              color: '#EF9F27',
+              weight: 1.6,
+              opacity: 1,
+              fillOpacity: Math.min(
+                (getFeatureStyle(slug, ilStats).fillOpacity as number) + 0.18,
+                0.95,
+              ),
+            })
+            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+              l.bringToFront()
+            }
+          })
+          layer.on('mouseout', (e: LeafletMouseEvent) => {
+            const l = e.target as L.Path
+            l.setStyle(getFeatureStyle(slug, ilStats))
+          })
+          layer.on('click', () => {
+            router.push(`/il/${slug}`)
+          })
+        }
       }}
     />
   )
