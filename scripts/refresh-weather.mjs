@@ -158,23 +158,52 @@ async function main() {
   // tek tek update kullanıyoruz; "satır yoksa skip" — region_stats Worker cron
   // tarafından dolduruluyor zaten.
   let updated = 0
+  let firstFewErrors = []
   for (const e of enriched) {
     if (!e.weather) continue
-    const { error } = await supabase
+    const { data, error, count, status, statusText } = await supabase
       .from('region_stats')
-      .update({
-        temperature: e.weather.temperature,
-        humidity: e.weather.humidity,
-        wind_speed: e.weather.windSpeed,
-        wind_direction: e.weather.windDirection,
-        updated_at: new Date().toISOString(),
-      })
+      .update(
+        {
+          temperature: e.weather.temperature,
+          humidity: e.weather.humidity,
+          wind_speed: e.weather.windSpeed,
+          wind_direction: e.weather.windDirection,
+          updated_at: new Date().toISOString(),
+        },
+        { count: 'exact' },
+      )
       .eq('il_slug', e.slug)
-    if (!error) updated++
-    else console.error(`[refresh-weather] ${e.slug} update error:`, error.message)
+      .select()
+
+    if (error) {
+      if (firstFewErrors.length < 3) {
+        firstFewErrors.push(`${e.slug}: ${error.message} (${error.code})`)
+      }
+      continue
+    }
+    // data array — kaç satır etkilendi
+    const affected = Array.isArray(data) ? data.length : (count ?? 0)
+    if (affected > 0) {
+      updated++
+    } else {
+      if (firstFewErrors.length < 3) {
+        firstFewErrors.push(`${e.slug}: 0 rows affected (status=${status} ${statusText})`)
+      }
+    }
   }
 
-  console.log(`[refresh-weather] ${updated} il için weather DB'ye yazıldı`)
+  console.log(`[refresh-weather] ${updated} / ${enriched.filter(e=>e.weather).length} il için weather DB'ye yazıldı`)
+  if (firstFewErrors.length > 0) {
+    console.error('[refresh-weather] İlk hatalar:')
+    for (const err of firstFewErrors) console.error('  -', err)
+  }
+
+  if (updated === 0) {
+    console.error('[refresh-weather] HATA: hiçbir satır güncellenmedi!')
+    console.error('  Olası sebepler: il_slug mismatch, RLS reddediyor, service_role yetkisi yok')
+    process.exit(1)
+  }
 }
 
 main().catch((err) => {
