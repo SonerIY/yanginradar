@@ -42,6 +42,12 @@ export default function Navbar({ updatedAt }: Props) {
             İstatistikler
           </Link>
           <Link
+            href="/arsiv"
+            className="text-xs sm:text-sm font-bold text-[#a3a09a] hover:text-[#f4f2ec] hidden sm:inline"
+          >
+            Arşiv
+          </Link>
+          <Link
             href="/hakkinda"
             className="text-xs sm:text-sm font-bold text-[#a3a09a] hover:text-[#f4f2ec]"
           >

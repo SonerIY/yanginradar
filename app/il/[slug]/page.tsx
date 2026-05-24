@@ -13,6 +13,8 @@ import { riskFromWeather, riskColor, riskLabel } from '@/lib/risk'
 import { getIlNews } from '@/lib/news-server'
 import NewsList from '@/components/news/NewsList'
 import AdInArticle from '@/components/ads/AdInArticle'
+import SubscribeButton from '@/components/notifications/SubscribeButton'
+import ShareButtons from '@/components/ShareButtons'
 import type { FirePoint, NewsItem } from '@/types'
 
 export const revalidate = 600 // 10 dk cache
@@ -142,6 +144,13 @@ export default async function IlPage({
           <p className="mt-2 text-sm text-[#a3a09a]">
             NASA FIRMS uydu verisiyle anlık olarak güncellenir · Son 7 günün özeti
           </p>
+          <div className="mt-3">
+            <ShareButtons
+              url={`https://yanginradar.com/il/${il.slug}`}
+              title={`${il.name} orman yangını takibi — canlı NASA uydu verisi`}
+              compact
+            />
+          </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -222,6 +231,17 @@ export default async function IlPage({
                 <div className="text-[11px] font-extrabold text-[#a3a09a] uppercase">7 günde</div>
                 <div className="text-2xl font-bold text-[#f4f2ec]">{ilData.weekCount}</div>
               </div>
+            </div>
+
+            {/* İl bazlı bildirim aboneliği */}
+            <div className="bg-[#262624] border border-[#3f3f3c] rounded-lg p-4">
+              <div className="text-[11px] font-extrabold text-[#a3a09a] uppercase mb-2">
+                🔔 {il.name} bildirimi
+              </div>
+              <p className="text-xs text-[#a3a09a] mb-3 leading-snug">
+                Yalnız {il.name} ilinde yeni bir yüksek-güven yangın tespit edildiğinde tarayıcı bildirimi al.
+              </p>
+              <SubscribeButton ilSlug={il.slug} ilName={il.name} />
             </div>
 
             <AdSquare />

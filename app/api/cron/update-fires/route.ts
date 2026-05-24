@@ -159,17 +159,33 @@ async function handle(request: Request) {
           ? `${topIl[1].name} başta olmak üzere ${newCount} yeni yüksek güven yangın tespiti.`
           : `Türkiye genelinde ${newCount} yeni yüksek güven yangın tespiti.`
 
-        const res = await sendPushToSubscribers(
+        // 1) Global aboneler için tek özet push
+        const globalRes = await sendPushToSubscribers(
           {
             title: '🔥 YangınRadar — yeni tespit',
             body: headline,
             url: topIl ? `/il/${topIl[0]}` : '/',
-            tag: 'yangin-cron',
+            tag: 'yangin-cron-global',
           },
           { ilSlug: null },
         )
-        pushSent = res.sent
-        pushPruned = res.pruned
+        pushSent += globalRes.sent
+        pushPruned += globalRes.pruned
+
+        // 2) Etkilenen her il için il-spesifik aboneye ayrı push
+        for (const [slug, { name, count }] of Object.entries(byIl)) {
+          const ilRes = await sendPushToSubscribers(
+            {
+              title: `🔥 ${name} — yeni yangın tespiti`,
+              body: `${name} ilinde ${count} yeni yüksek-güven yangın saptandı. Detaylar için tıkla.`,
+              url: `/il/${slug}`,
+              tag: `yangin-cron-${slug}`,
+            },
+            { ilSlug: slug },
+          )
+          pushSent += ilRes.sent
+          pushPruned += ilRes.pruned
+        }
       }
     } catch {
       // push hatası cron response'unu etkilemesin

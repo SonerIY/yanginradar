@@ -84,11 +84,12 @@ export async function sendPushToSubscribers(
     .select('endpoint,p256dh,auth,il_slug')
 
   if (options.ilSlug !== undefined) {
-    // null = tüm Türkiye aboneleri; bir slug verildiyse o ile + global aboneler
+    // ilSlug == null  → sadece global aboneler (il_slug IS NULL)
+    // ilSlug == 'X'   → sadece o ile abone olanlar (çift bildirim olmasın)
     if (options.ilSlug === null) {
       query = query.is('il_slug', null)
     } else {
-      query = query.or(`il_slug.eq.${options.ilSlug},il_slug.is.null`)
+      query = query.eq('il_slug', options.ilSlug)
     }
   }
 

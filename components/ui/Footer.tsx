@@ -17,6 +17,7 @@ export default function Footer() {
           <ul className="space-y-1">
             <li><Link href="/" className="text-[#f4f2ec] hover:text-[#EF9F27]">Harita</Link></li>
             <li><Link href="/istatistikler" className="text-[#f4f2ec] hover:text-[#EF9F27]">İstatistikler</Link></li>
+            <li><Link href="/arsiv" className="text-[#f4f2ec] hover:text-[#EF9F27]">Arşiv</Link></li>
             <li><Link href="/hakkinda" className="text-[#f4f2ec] hover:text-[#EF9F27]">Hakkında</Link></li>
             <li><Link href="/gizlilik" className="text-[#f4f2ec] hover:text-[#EF9F27]">Gizlilik Politikası</Link></li>
             <li><Link href="/cerezler" className="text-[#f4f2ec] hover:text-[#EF9F27]">Çerez Politikası</Link></li>
