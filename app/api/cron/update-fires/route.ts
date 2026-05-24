@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import { fetchFirmsData, parseFirmsCsv, reverseGeocode } from '@/lib/firms'
 import { IL_LIST } from '@/lib/il-data'
+import { fetchBulkCurrentWeather } from '@/lib/weather'
+import { riskFromWeather } from '@/lib/risk'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -90,14 +92,23 @@ async function handle(request: Request) {
         }
       }
 
-      const statRows = IL_LIST.map((il) => ({
-        il_slug: il.slug,
-        il_name: il.name,
-        fire_count_today: todayCount[il.slug] ?? 0,
-        fire_count_week: weekCount[il.slug] ?? 0,
-        risk_score: 0, // Faz 2'de hava durumu ile hesaplanacak
-        updated_at: new Date().toISOString(),
-      }))
+      // Faz 2 — Open-Meteo'dan 81 il için anlık hava verisi (tek istek, bulk)
+      const weatherData = await fetchBulkCurrentWeather(
+        IL_LIST.map((il) => ({ lat: il.lat, lon: il.lon })),
+      )
+
+      const statRows = IL_LIST.map((il, idx) => {
+        const todayFires = todayCount[il.slug] ?? 0
+        const weather = weatherData[idx]
+        return {
+          il_slug: il.slug,
+          il_name: il.name,
+          fire_count_today: todayFires,
+          fire_count_week: weekCount[il.slug] ?? 0,
+          risk_score: riskFromWeather(weather, todayFires),
+          updated_at: new Date().toISOString(),
+        }
+      })
 
       const { error: statErr } = await supabase
         .from('region_stats')

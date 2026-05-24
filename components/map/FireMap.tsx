@@ -1,11 +1,19 @@
 'use client'
 
 import { useEffect } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, CircleMarker, Popup, Marker } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { FirePoint } from '@/types'
+
+export interface WindPoint {
+  lat: number
+  lon: number
+  speed: number       // m/s
+  direction: number   // 0-360, meteorological (rüzgarın geldiği yön)
+  ilName?: string
+}
 
 // Leaflet'in default marker icon path bug fix (webpack)
 // react-leaflet circle marker kullandığı için kritik değil ama
@@ -21,6 +29,33 @@ L.Icon.Default.mergeOptions({
 interface Props {
   fires: FirePoint[]
   showWind?: boolean
+  windPoints?: WindPoint[]
+  center?: [number, number]
+  zoom?: number
+  minZoom?: number
+}
+
+function windArrowIcon(speed: number, direction: number, ilName?: string): L.DivIcon {
+  // Meteorological "geldiği yön" → gittiği yön için 180° döndür
+  const rotation = (direction + 180) % 360
+  const opacity = Math.min(0.35 + speed * 0.06, 0.95)
+  const stroke = speed >= 8 ? '#E24B4A' : speed >= 4 ? '#EF9F27' : '#9bc5e8'
+
+  const html = `
+    <div style="transform: rotate(${rotation}deg); transform-origin: center;" title="${ilName ?? ''} ${speed.toFixed(0)} m/s">
+      <svg width="22" height="22" viewBox="0 0 22 22" style="opacity: ${opacity};">
+        <line x1="11" y1="20" x2="11" y2="4" stroke="${stroke}" stroke-width="2" stroke-linecap="round"/>
+        <polyline points="6,9 11,3 16,9" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  `
+
+  return L.divIcon({
+    html,
+    className: 'wind-arrow-icon',
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+  })
 }
 
 function formatDateTime(date: string, time: string): string {
@@ -30,7 +65,14 @@ function formatDateTime(date: string, time: string): string {
   return `${date} ${hh}:${mm} UTC`
 }
 
-export default function FireMap({ fires }: Props) {
+export default function FireMap({
+  fires,
+  showWind = false,
+  windPoints = [],
+  center = [39.0, 35.0],
+  zoom = 6,
+  minZoom = 5,
+}: Props) {
   // Resize fix: Leaflet harita konteyneri boyut hesabı için
   useEffect(() => {
     const t = setTimeout(() => {
@@ -41,9 +83,9 @@ export default function FireMap({ fires }: Props) {
 
   return (
     <MapContainer
-      center={[39.0, 35.0]}
-      zoom={6}
-      minZoom={5}
+      center={center}
+      zoom={zoom}
+      minZoom={minZoom}
       maxZoom={14}
       scrollWheelZoom
       style={{ height: '100%', width: '100%', background: '#081421' }}
@@ -53,6 +95,16 @@ export default function FireMap({ fires }: Props) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
         subdomains={['a', 'b', 'c', 'd']}
       />
+
+      {showWind &&
+        windPoints.map((wp, idx) => (
+          <Marker
+            key={`wind-${idx}`}
+            position={[wp.lat, wp.lon]}
+            icon={windArrowIcon(wp.speed, wp.direction, wp.ilName)}
+            interactive={false}
+          />
+        ))}
 
       <MarkerClusterGroup
         chunkedLoading

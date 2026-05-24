@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import IlSearchBox from './IlSearchBox'
 
 interface Props {
   updatedAt?: string
@@ -15,13 +16,8 @@ export default function Navbar({ updatedAt }: Props) {
         <span>YangınRadar</span>
       </Link>
 
-      <div className="hidden md:flex items-center gap-2 flex-1 max-w-sm min-h-10 px-3 border border-[#555550] rounded-md text-[#a3a09a]">
-        <span>⌕</span>
-        <input
-          type="search"
-          placeholder="İl veya ilçe ara..."
-          className="w-full bg-transparent text-[#f4f2ec] outline-none border-0"
-        />
+      <div className="hidden md:block flex-1 max-w-sm">
+        <IlSearchBox />
       </div>
 
       <div className="flex items-center gap-2 text-[#E24B4A] font-extrabold">
@@ -30,10 +26,10 @@ export default function Navbar({ updatedAt }: Props) {
       </div>
 
       {updatedAt && (
-        <div className="text-[13px] text-[#a3a09a]">◷ Güncellendi: {updatedAt}</div>
+        <div className="text-[13px] text-[#a3a09a] hidden sm:block">◷ Güncellendi: {updatedAt}</div>
       )}
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-3">
         <Link
           href="/istatistikler"
           className="text-sm font-bold text-[#a3a09a] hover:text-[#f4f2ec]"
