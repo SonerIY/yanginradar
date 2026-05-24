@@ -7,10 +7,12 @@ import AlertList from './sidebar/AlertList'
 import AdSquare from './ads/AdSquare'
 import type { FirePoint } from '@/types'
 import type { WindPoint } from './map/FireMap'
+import type { IlSummary } from './map/IlBoundariesLayer'
 
 interface Props {
   fires: FirePoint[]
   windPoints: WindPoint[]
+  ilStats: Record<string, IlSummary>
   totalFires: number
   affectedIl: number
   diff: number
@@ -19,17 +21,25 @@ interface Props {
 export default function HomeShell({
   fires,
   windPoints,
+  ilStats,
   totalFires,
   affectedIl,
   diff,
 }: Props) {
   const [showWind, setShowWind] = useState(true)
+  const [showBoundaries, setShowBoundaries] = useState(true)
 
   return (
     <>
       <div className="flex flex-col lg:flex-row flex-1 min-h-0">
         <div className="flex-1 min-h-[420px] lg:min-h-0 lg:h-[calc(100vh-180px)] border-y lg:border-y-0 lg:border-r border-[#3f3f3c]">
-          <FireMapClient fires={fires} windPoints={windPoints} showWind={showWind} />
+          <FireMapClient
+            fires={fires}
+            windPoints={windPoints}
+            showWind={showWind}
+            showBoundaries={showBoundaries}
+            ilStats={ilStats}
+          />
         </div>
 
         <aside className="w-full lg:w-80 bg-[#262624] flex flex-col">
@@ -74,9 +84,14 @@ export default function HomeShell({
           />
           Rüzgar katmanı
         </label>
-        <label className="flex items-center gap-2 text-sm text-[#64645f]">
-          <input type="checkbox" disabled className="accent-[#30c7a4]" />
-          Risk haritası (yakında)
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showBoundaries}
+            onChange={(e) => setShowBoundaries(e.target.checked)}
+            className="accent-[#30c7a4]"
+          />
+          İl risk haritası
         </label>
 
         <div className="ml-auto text-xs text-[#64645f]">

@@ -7,6 +7,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { FirePoint } from '@/types'
 import { formatSatellite } from '@/lib/firms'
+import IlBoundariesLayer, { type IlSummary } from './IlBoundariesLayer'
 
 export interface WindPoint {
   lat: number
@@ -31,6 +32,8 @@ interface Props {
   fires: FirePoint[]
   showWind?: boolean
   windPoints?: WindPoint[]
+  showBoundaries?: boolean
+  ilStats?: Record<string, IlSummary>
   center?: [number, number]
   zoom?: number
   minZoom?: number
@@ -87,6 +90,8 @@ export default function FireMap({
   fires,
   showWind = false,
   windPoints = [],
+  showBoundaries = false,
+  ilStats,
   center = [39.0, 35.0],
   zoom = 6,
   minZoom = 5,
@@ -113,6 +118,8 @@ export default function FireMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
         subdomains={['a', 'b', 'c', 'd']}
       />
+
+      {showBoundaries && ilStats && <IlBoundariesLayer ilStats={ilStats} />}
 
       {showWind &&
         windPoints.map((wp, idx) => (

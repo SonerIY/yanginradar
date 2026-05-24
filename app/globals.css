@@ -127,6 +127,70 @@
   animation: windflow 0.7s linear infinite;
 }
 
+/* İl sınırı hover tooltip — Leaflet tooltip wrapper'ını override eder */
+.leaflet-tooltip.ilr-tooltip-wrap {
+  background: #1a1a18 !important;
+  color: #f4f2ec !important;
+  border: 1px solid #3f3f3c !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  white-space: normal !important;
+  max-width: 240px !important;
+}
+.leaflet-tooltip.ilr-tooltip-wrap::before {
+  border-top-color: #3f3f3c !important;
+}
+.ilr-tooltip .ilr-head {
+  font-size: 14px;
+  font-weight: 800;
+  color: #E24B4A;
+  margin-bottom: 6px;
+}
+.ilr-tooltip .ilr-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+}
+.ilr-tooltip .ilr-label {
+  color: #a3a09a;
+  font-weight: 700;
+}
+.ilr-tooltip .ilr-fire {
+  color: #E24B4A;
+  font-weight: 700;
+}
+.ilr-tooltip .ilr-clear {
+  color: #30c7a4;
+  font-weight: 700;
+}
+.ilr-tooltip .ilr-risk {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid;
+  margin-top: 4px;
+}
+.ilr-tooltip .ilr-weather {
+  margin-top: 4px;
+  color: #a3a09a;
+  font-size: 11px;
+}
+.ilr-tooltip .ilr-foot {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #3f3f3c;
+  font-size: 10px;
+  color: #64645f;
+  text-align: right;
+}
+.ilr-tooltip .ilr-muted {
+  color: #64645f;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

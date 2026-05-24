@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic'
 import type { FirePoint } from '@/types'
 import type { WindPoint } from '@/components/map/FireMap'
+import type { IlSummary } from '@/components/map/IlBoundariesLayer'
 
 const FireMap = dynamic(() => import('@/components/map/FireMap'), {
   ssr: false,
@@ -17,27 +18,13 @@ interface Props {
   fires: FirePoint[]
   showWind?: boolean
   windPoints?: WindPoint[]
+  showBoundaries?: boolean
+  ilStats?: Record<string, IlSummary>
   center?: [number, number]
   zoom?: number
   minZoom?: number
 }
 
-export default function FireMapClient({
-  fires,
-  showWind,
-  windPoints,
-  center,
-  zoom,
-  minZoom,
-}: Props) {
-  return (
-    <FireMap
-      fires={fires}
-      showWind={showWind}
-      windPoints={windPoints}
-      center={center}
-      zoom={zoom}
-      minZoom={minZoom}
-    />
-  )
+export default function FireMapClient(props: Props) {
+  return <FireMap {...props} />
 }
