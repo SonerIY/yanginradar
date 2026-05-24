@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { FirePoint } from '@/types'
 
 interface Props {
@@ -40,14 +41,11 @@ export default function AlertList({ fires, limit = 20 }: Props) {
 
         {sorted.map((fire, idx) => {
           const key = fire.id ?? `${fire.lat}-${fire.lon}-${fire.acq_date}-${fire.acq_time}-${idx}`
-          return (
-            <div
-              key={key}
-              className="flex items-center gap-3 min-h-[52px] px-3 py-2 border-t border-[#3f3f3c] cursor-pointer hover:bg-[#2f2f2c]"
-            >
+          const inner = (
+            <div className="flex items-center gap-3 min-h-[52px] px-3 py-2 border-t border-[#3f3f3c] hover:bg-[#2f2f2c] transition group">
               <i className={`w-2 h-2 rounded-full shrink-0 ${dotClass(fire.confidence)}`} />
               <div className="flex-1 min-w-0">
-                <b className="block text-sm text-[#f4f2ec] truncate">
+                <b className="block text-sm text-[#f4f2ec] truncate group-hover:text-[#EF9F27] transition">
                   {fire.il_name ?? 'Bilinmiyor'}
                 </b>
                 <span className="block text-[11px] font-bold text-[#a3a09a]">
@@ -55,7 +53,25 @@ export default function AlertList({ fires, limit = 20 }: Props) {
                   {formatTime(fire.acq_date, fire.acq_time)}
                 </span>
               </div>
+              {fire.il_slug && (
+                <span className="text-xs text-[#64645f] group-hover:text-[#EF9F27] transition shrink-0">
+                  →
+                </span>
+              )}
             </div>
+          )
+
+          return fire.il_slug ? (
+            <Link
+              key={key}
+              href={`/il/${fire.il_slug}`}
+              className="block cursor-pointer"
+              prefetch={false}
+            >
+              {inner}
+            </Link>
+          ) : (
+            <div key={key}>{inner}</div>
           )
         })}
       </div>

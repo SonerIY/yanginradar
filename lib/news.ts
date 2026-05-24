@@ -17,6 +17,8 @@ export interface FetchNewsOptions {
   customQuery?: string
   /** Maksimum kaç sonuç döneceği (varsayılan 15). */
   limit?: number
+  /** Fetch timeout (ms). Varsayılan 2500. */
+  timeoutMs?: number
 }
 
 export function buildIlSearchQuery(ilName: string): string {
@@ -110,7 +112,10 @@ function parseRss(xml: string, limit: number): NewsItem[] {
 
 export async function fetchNews(query: string, options: FetchNewsOptions = {}): Promise<NewsItem[]> {
   const limit = options.limit ?? 15
+  const timeoutMs = options.timeoutMs ?? 2500
   const url = buildUrl(query)
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
     const res = await fetch(url, {
       headers: {
@@ -118,12 +123,15 @@ export async function fetchNews(query: string, options: FetchNewsOptions = {}): 
         accept: 'application/rss+xml, application/xml;q=0.9, */*;q=0.8',
       },
       cache: 'no-store',
+      signal: controller.signal,
     })
     if (!res.ok) return []
     const xml = await res.text()
     return parseRss(xml, limit)
   } catch {
     return []
+  } finally {
+    clearTimeout(timer)
   }
 }
 
