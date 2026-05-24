@@ -122,7 +122,9 @@ export async function fetchNews(query: string, options: FetchNewsOptions = {}): 
         'user-agent': 'Mozilla/5.0 (compatible; YangınRadar/1.0; +https://yanginradar.com)',
         accept: 'application/rss+xml, application/xml;q=0.9, */*;q=0.8',
       },
-      cache: 'no-store',
+      // Next.js 16 SSG ile uyumlu — KV cache zaten 30dk; bu Next.js fetch
+      // cache'inin SSG'yi dinamik olmaya zorlamasını engeller.
+      next: { revalidate: 600 },
       signal: controller.signal,
     })
     if (!res.ok) return []
