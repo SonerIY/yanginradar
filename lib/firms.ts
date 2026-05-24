@@ -89,6 +89,62 @@ export function haversine(lat1: number, lon1: number, lat2: number, lon2: number
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
+/**
+ * FRP (Fire Radiative Power, MW) değerine göre yangın büyüklüğü kategorisi.
+ * NASA FIRMS bir termal anomali sistemidir; düşük FRP genelde anız/endüstri,
+ * yüksek FRP gerçek orman yangını sinyalidir.
+ */
+export type FireMagnitude = 'industrial' | 'small' | 'medium' | 'large' | 'major'
+
+export function frpCategory(frp: number | undefined | null): FireMagnitude {
+  const v = Number(frp) || 0
+  if (v < 5) return 'industrial'
+  if (v < 20) return 'small'
+  if (v < 100) return 'medium'
+  if (v < 500) return 'large'
+  return 'major'
+}
+
+export function frpLabel(frp: number | undefined | null): string {
+  switch (frpCategory(frp)) {
+    case 'industrial': return 'Düşük yoğunluk · anız/endüstriyel olabilir'
+    case 'small':      return 'Küçük yangın'
+    case 'medium':     return 'Orta yangın'
+    case 'large':      return 'Büyük yangın'
+    case 'major':      return 'Çok büyük yangın'
+  }
+}
+
+export function frpColor(frp: number | undefined | null): string {
+  switch (frpCategory(frp)) {
+    case 'industrial': return '#7a7a75' // gri — güvenilir değil
+    case 'small':      return '#EF9F27' // turuncu — küçük
+    case 'medium':     return '#E24B4A' // kırmızı
+    case 'large':      return '#E24B4A'
+    case 'major':      return '#E24B4A'
+  }
+}
+
+export function frpOpacity(frp: number | undefined | null): number {
+  switch (frpCategory(frp)) {
+    case 'industrial': return 0.45
+    case 'small':      return 0.75
+    case 'medium':     return 0.9
+    case 'large':      return 1.0
+    case 'major':      return 1.0
+  }
+}
+
+export function frpRadius(frp: number | undefined | null): number {
+  switch (frpCategory(frp)) {
+    case 'industrial': return 4
+    case 'small':      return 6
+    case 'medium':     return 8
+    case 'large':      return 11
+    case 'major':      return 14
+  }
+}
+
 /** NASA FIRMS CSV'sinin "satellite" sütunundaki kısa kodu kullanıcı dostu isme çevirir. */
 export function formatSatellite(raw: string | undefined): string {
   if (!raw) return 'VIIRS'

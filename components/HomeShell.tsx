@@ -34,6 +34,13 @@ const CONF_OPTIONS = [
   { value: 'h', label: 'Sadece Yüksek' },
 ]
 
+const FRP_OPTIONS = [
+  { value: 'all', label: 'Tümü' },
+  { value: '5', label: '> 5 MW (anızsız)' },
+  { value: '20', label: '> 20 MW (orta+)' },
+  { value: '100', label: '> 100 MW (büyük)' },
+]
+
 const SAT_OPTIONS = [{ value: 'viirs', label: 'VIIRS' }]
 
 function fireTimestamp(f: FirePoint): number {
@@ -56,20 +63,24 @@ export default function HomeShell({
   const [showBoundaries, setShowBoundaries] = useState(true)
   const [timeFilter, setTimeFilter] = useState('24h')
   const [confFilter, setConfFilter] = useState('hn')
+  const [frpFilter, setFrpFilter] = useState('all')
 
   const filteredFires = useMemo(() => {
     const hours =
       { '24h': 24, '12h': 12, '6h': 6, '1h': 1 }[timeFilter] ?? 24
     const cutoff = Date.now() - hours * 3600 * 1000
+    const frpMin = frpFilter === 'all' ? 0 : Number(frpFilter)
     return fires.filter((f) => {
       // Time
       const ts = fireTimestamp(f)
       if (ts > 0 && ts < cutoff) return false
       // Confidence
       if (confFilter === 'h' && f.confidence !== 'h') return false
+      // FRP
+      if (frpMin > 0 && (Number(f.frp) || 0) < frpMin) return false
       return true
     })
-  }, [fires, timeFilter, confFilter])
+  }, [fires, timeFilter, confFilter, frpFilter])
 
   // Filtre sonrası canlı istatistikler
   const visibleCount = filteredFires.length
@@ -140,6 +151,12 @@ export default function HomeShell({
             onChange={setConfFilter}
           />
           <FilterDropdown
+            label="Yoğunluk"
+            options={FRP_OPTIONS}
+            value={frpFilter}
+            onChange={setFrpFilter}
+          />
+          <FilterDropdown
             label="Uydu"
             options={SAT_OPTIONS}
             value="viirs"
@@ -166,12 +183,13 @@ export default function HomeShell({
             İl risk haritası
           </label>
 
-          {(timeFilter !== '24h' || confFilter !== 'hn') && (
+          {(timeFilter !== '24h' || confFilter !== 'hn' || frpFilter !== 'all') && (
             <button
               type="button"
               onClick={() => {
                 setTimeFilter('24h')
                 setConfFilter('hn')
+                setFrpFilter('all')
               }}
               className="shrink-0 text-xs text-[#EF9F27] hover:underline"
             >

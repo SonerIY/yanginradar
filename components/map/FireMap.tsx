@@ -7,7 +7,7 @@ import MapLegend from './MapLegend'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { FirePoint } from '@/types'
-import { formatSatellite } from '@/lib/firms'
+import { formatSatellite, frpLabel, frpColor, frpOpacity, frpRadius, frpCategory } from '@/lib/firms'
 import IlBoundariesLayer, { type IlSummary } from './IlBoundariesLayer'
 
 export interface WindPoint {
@@ -145,9 +145,11 @@ export default function FireMap({
         maxClusterRadius={45}
       >
         {fires.map((fire, idx) => {
-          const isHigh = fire.confidence === 'h'
-          const color = isHigh ? '#E24B4A' : '#EF9F27'
-          const radius = isHigh ? 8 : 6
+          const color = frpColor(fire.frp)
+          const radius = frpRadius(fire.frp)
+          const fillOpacity = frpOpacity(fire.frp) * 0.85
+          const label = frpLabel(fire.frp)
+          const category = frpCategory(fire.frp)
           const key = fire.id ?? `${fire.lat}-${fire.lon}-${fire.acq_date}-${fire.acq_time}-${idx}`
 
           return (
@@ -158,15 +160,29 @@ export default function FireMap({
               pathOptions={{
                 color,
                 fillColor: color,
-                fillOpacity: 0.75,
+                fillOpacity,
                 weight: 1.2,
-                opacity: 0.95,
+                opacity: Math.min(fillOpacity + 0.1, 1),
               }}
             >
               <Popup>
-                <div style={{ minWidth: 180, fontSize: 12, lineHeight: 1.45 }}>
-                  <div style={{ fontWeight: 800, color: '#E24B4A', marginBottom: 4 }}>
+                <div style={{ minWidth: 200, fontSize: 12, lineHeight: 1.45 }}>
+                  <div style={{ fontWeight: 800, color: color, marginBottom: 4 }}>
                     {fire.il_name ?? 'Konum Bilinmiyor'}
+                  </div>
+                  <div
+                    style={{
+                      padding: '4px 6px',
+                      marginBottom: 6,
+                      background: color + '22',
+                      border: `1px solid ${color}55`,
+                      borderRadius: 4,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: color,
+                    }}
+                  >
+                    {label}
                   </div>
                   <div>
                     <strong>Tarih:</strong> {formatDateTime(fire.acq_date, fire.acq_time)}
@@ -184,6 +200,30 @@ export default function FireMap({
                   <div style={{ marginTop: 4, color: '#666' }}>
                     {fire.lat.toFixed(3)}°N, {fire.lon.toFixed(3)}°E
                   </div>
+                  <a
+                    href={`https://www.google.com/maps?q=${fire.lat},${fire.lon}&z=15&t=k`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-block',
+                      marginTop: 8,
+                      padding: '5px 8px',
+                      background: '#EF9F27',
+                      color: '#1a1a18',
+                      fontWeight: 800,
+                      borderRadius: 4,
+                      textDecoration: 'none',
+                      fontSize: 11,
+                    }}
+                  >
+                    Uydudan doğrula ↗
+                  </a>
+                  {category === 'industrial' && (
+                    <div style={{ marginTop: 6, fontSize: 10, color: '#888', lineHeight: 1.3 }}>
+                      Düşük FRP değeri (&lt;5 MW) genelde anız yakma veya
+                      endüstriyel ısı kaynağına işaret eder.
+                    </div>
+                  )}
                 </div>
               </Popup>
             </CircleMarker>
