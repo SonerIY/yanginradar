@@ -1,3 +1,1 @@
-# Google AdSense ads.txt — Authorized Digital Sellers
-# AdSense onayı sonrası bu satırı kendi publisher ID'nizle değiştirin:
-# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+google.com, pub-7592146653117120, DIRECT, f08c47fec0942fa0
