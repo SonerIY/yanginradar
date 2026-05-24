@@ -133,9 +133,9 @@ export default function HomeShell({
         </aside>
       </div>
 
-      {/* Filter bar — gerçek dropdown'lar */}
-      <section className="bg-[#262624] border-t border-[#3f3f3c]">
-        <div className="flex items-center gap-3 px-4 py-3 overflow-x-auto whitespace-nowrap">
+      {/* Filter bar — overflow-visible (dropdown'lar serbest açılsın) + flex-wrap (mobile) */}
+      <section className="bg-[#262624] border-t border-[#3f3f3c] relative">
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3">
           <b className="text-[#a3a09a] text-sm shrink-0">Filtreler:</b>
 
           <FilterDropdown
