@@ -2,6 +2,12 @@ import type { WeatherData } from '@/types'
 
 const OPEN_METEO = 'https://api.open-meteo.com/v1/forecast'
 
+// Cloudflare Workers IP'leri Open-Meteo tarafından sık sık rate-limit'liyor.
+// ASCII user-agent + küçük chunk + chunk arası kısa delay rate-limit'i azaltır.
+const UA = 'YanginRadar/1.0 (+https://yanginradar.com)'
+const BULK_CHUNK = 27 // 81 il = 3 chunk
+const BULK_CHUNK_DELAY_MS = 250
+
 export interface CurrentWeatherResponse {
   current: {
     time: string
@@ -29,7 +35,10 @@ export async function fetchCurrentWeather(lat: number, lon: number): Promise<Wea
     `&wind_speed_unit=ms&timezone=auto`
 
   try {
-    const res = await fetch(url, { next: { revalidate: 1800 } })
+    const res = await fetch(url, {
+      headers: { 'user-agent': UA },
+      next: { revalidate: 1800 },
+    })
     if (!res.ok) return null
     const data = (await res.json()) as CurrentWeatherResponse
     return {
@@ -43,19 +52,12 @@ export async function fetchCurrentWeather(lat: number, lon: number): Promise<Wea
   }
 }
 
-/**
- * 81 il için tek seferde rüzgar/sıcaklık verisi çeker.
- * Open-Meteo "comma separated multi-location" desteğini kullanır.
- */
-export async function fetchBulkCurrentWeather(
+async function fetchOneBulk(
   points: Array<{ lat: number; lon: number }>,
-  timeoutMs = 8000,
+  timeoutMs: number,
 ): Promise<Array<WeatherData | null>> {
-  if (points.length === 0) return []
-
   const lats = points.map((p) => p.lat).join(',')
   const lons = points.map((p) => p.lon).join(',')
-
   const url =
     `${OPEN_METEO}?latitude=${lats}&longitude=${lons}` +
     `&current=temperature_2m,relative_humidity_2m,windspeed_10m,winddirection_10m` +
@@ -65,13 +67,13 @@ export async function fetchBulkCurrentWeather(
   const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    // Next.js fetch cache (15dk) — SSG/ISR uyumu için
     const res = await fetch(url, {
+      headers: { 'user-agent': UA },
       next: { revalidate: 900 },
       signal: controller.signal,
     })
     if (!res.ok) {
-      console.error('[bulk-weather] non-ok:', res.status, res.statusText)
+      console.error('[bulk-weather] non-ok:', res.status, res.statusText, 'chunk size:', points.length)
       return points.map(() => null)
     }
     const data = await res.json()
@@ -88,11 +90,38 @@ export async function fetchBulkCurrentWeather(
     })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    console.error('[bulk-weather] error:', msg)
+    console.error('[bulk-weather] error:', msg, 'chunk size:', points.length)
     return points.map(() => null)
   } finally {
     clearTimeout(timer)
   }
+}
+
+/**
+ * 81 il için tek seferde rüzgar/sıcaklık verisi çeker.
+ * Open-Meteo rate-limit'ini aşmak için chunk'lı çağrı (27+27+27).
+ */
+export async function fetchBulkCurrentWeather(
+  points: Array<{ lat: number; lon: number }>,
+  timeoutMs = 8000,
+): Promise<Array<WeatherData | null>> {
+  if (points.length === 0) return []
+
+  const chunks: Array<Array<{ lat: number; lon: number }>> = []
+  for (let i = 0; i < points.length; i += BULK_CHUNK) {
+    chunks.push(points.slice(i, i + BULK_CHUNK))
+  }
+
+  const results: Array<WeatherData | null> = []
+  for (let i = 0; i < chunks.length; i++) {
+    const chunkResult = await fetchOneBulk(chunks[i], timeoutMs)
+    results.push(...chunkResult)
+    if (i < chunks.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, BULK_CHUNK_DELAY_MS))
+    }
+  }
+
+  return results
 }
 
 export async function fetchHourlyForecast(
@@ -106,7 +135,10 @@ export async function fetchHourlyForecast(
     `&wind_speed_unit=ms&forecast_days=${days}&timezone=auto`
 
   try {
-    const res = await fetch(url, { next: { revalidate: 3600 } })
+    const res = await fetch(url, {
+      headers: { 'user-agent': UA },
+      next: { revalidate: 3600 },
+    })
     if (!res.ok) return null
     const data = (await res.json()) as HourlyWeatherResponse
     return data.hourly

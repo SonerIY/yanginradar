@@ -98,22 +98,32 @@ async function handle(request: Request) {
         IL_LIST.map((il) => ({ lat: il.lat, lon: il.lon })),
       )
 
+      // Open-Meteo'nun tamamı başarısız olduysa (tüm chunklar null) eski hava
+      // verisini koru, sadece fire counts ve updated_at güncelle.
+      const anyWeatherOk = weatherData.some((w) => w !== null)
+
       const statRows = IL_LIST.map((il, idx) => {
         const todayFires = todayCount[il.slug] ?? 0
         const weather = weatherData[idx]
-        return {
+        const base = {
           il_slug: il.slug,
           il_name: il.name,
           fire_count_today: todayFires,
           fire_count_week: weekCount[il.slug] ?? 0,
           risk_score: riskFromWeather(weather, todayFires),
-          // Hava verisini DB'ye yaz ki sayfa her isteğinde Open-Meteo'ya
-          // gidip 429 yemesin. Cron 3 saatte bir taze hava çeker.
+          updated_at: new Date().toISOString(),
+        }
+        if (!anyWeatherOk) {
+          // hiçbir hava verisi yok → mevcut DB değerlerini koru (upsert eksik
+          // kolonları UPDATE'te değiştirmez)
+          return base
+        }
+        return {
+          ...base,
           temperature: weather?.temperature ?? null,
           humidity: weather?.humidity ?? null,
           wind_speed: weather?.windSpeed ?? null,
           wind_direction: weather?.windDirection ?? null,
-          updated_at: new Date().toISOString(),
         }
       })
 
