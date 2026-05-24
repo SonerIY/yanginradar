@@ -49,6 +49,7 @@ export async function fetchCurrentWeather(lat: number, lon: number): Promise<Wea
  */
 export async function fetchBulkCurrentWeather(
   points: Array<{ lat: number; lon: number }>,
+  timeoutMs = 3000,
 ): Promise<Array<WeatherData | null>> {
   if (points.length === 0) return []
 
@@ -60,8 +61,11 @@ export async function fetchBulkCurrentWeather(
     `&current=temperature_2m,relative_humidity_2m,windspeed_10m,winddirection_10m` +
     `&wind_speed_unit=ms&timezone=auto`
 
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+
   try {
-    const res = await fetch(url, { cache: 'no-store' })
+    const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
     if (!res.ok) return points.map(() => null)
     const data = await res.json()
     const arr = Array.isArray(data) ? data : [data]
@@ -77,6 +81,8 @@ export async function fetchBulkCurrentWeather(
     })
   } catch {
     return points.map(() => null)
+  } finally {
+    clearTimeout(timer)
   }
 }
 
