@@ -12,6 +12,7 @@ import { fetchCurrentWeather } from '@/lib/weather'
 import { riskFromWeather, riskColor, riskLabel } from '@/lib/risk'
 import { getIlNews } from '@/lib/news-server'
 import NewsList from '@/components/news/NewsList'
+import AdInArticle from '@/components/ads/AdInArticle'
 import type { FirePoint } from '@/types'
 
 export const revalidate = 600 // 10 dk cache
@@ -285,6 +286,9 @@ export default async function IlPage({
             </div>
           )}
         </section>
+
+        {/* In-article reklam — son tespit tablosundan sonra */}
+        <AdInArticle />
 
         {/* SEO için açıklayıcı metin */}
         <section className="mt-8 text-sm leading-relaxed">

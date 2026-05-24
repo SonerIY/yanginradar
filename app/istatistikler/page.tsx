@@ -4,6 +4,7 @@ import Navbar from '@/components/ui/Navbar'
 import AdLeaderboard from '@/components/ads/AdLeaderboard'
 import Last30DaysChart from '@/components/charts/Last30DaysChart'
 import NewsList from '@/components/news/NewsList'
+import AdInArticle from '@/components/ads/AdInArticle'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import { getRecentArchivedNews } from '@/lib/news-server'
 
@@ -189,6 +190,9 @@ export default async function StatsPage() {
             <Last30DaysChart data={stats.daily} />
           )}
         </section>
+
+        {/* In-article reklam — trend chart sonrası */}
+        <AdInArticle />
 
         {/* Top 10 il + Confidence dağılımı */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
