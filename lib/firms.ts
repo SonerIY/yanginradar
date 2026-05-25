@@ -195,7 +195,11 @@ export function reverseGeocode(
   }
 
   if (!bestSlug || !bestName) return null
-  // NASA FIRMS Türkiye bbox dışı noktalar gelirse 400km'den uzakları reddet
-  if (bestDist > 400) return null
+  // Türkiye il merkezinden en uzak Türk toprağı ~120km (Iğdır kuzey kıyısı,
+  // Antalya kıyı şeridi, Hatay güney kıyısı). 130km eşiği komşu ülke
+  // tespitlerini (Erbil/Tabriz/Mosul/Aleppo vb.) Türkiye'ye yazmaktan
+  // korur. Türkiye dışı noktalar reverse geocode'da null döner ve cron
+  // tarafından upsert edilmez.
+  if (bestDist > 130) return null
   return { slug: bestSlug, name: bestName }
 }

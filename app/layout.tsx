@@ -40,9 +40,20 @@ export default function RootLayout({
     <html
       lang="tr"
       className={`${inter.variable} dark h-full antialiased`}
-      style={{ colorScheme: 'dark' }}
+      style={{ colorScheme: 'dark', backgroundColor: '#171716' }}
     >
-      <body className="min-h-full flex flex-col bg-[#171716] text-[#f4f2ec]">
+      <body
+        className="min-h-full flex flex-col bg-[#171716] text-[#f4f2ec]"
+        // FOUC fallback: Tailwind yüklenmeden önce de dark theme uygulanır
+        style={{
+          backgroundColor: '#171716',
+          color: '#f4f2ec',
+          minHeight: '100vh',
+          margin: 0,
+          fontFamily:
+            'var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        }}
+      >
         <AdSenseScript />
         {children}
         <Footer />
