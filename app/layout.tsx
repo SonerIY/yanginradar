@@ -1,7 +1,8 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import Footer from '@/components/ui/Footer'
 import AdSenseScript from '@/components/ads/AdSenseScript'
+import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
 import './globals.css'
 
 const inter = Inter({
@@ -11,6 +12,17 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://yanginradar.com'),
+  applicationName: 'YangınRadar',
+  appleWebApp: {
+    capable: true,
+    title: 'YangınRadar',
+    statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/favicon.ico',
+    apple: '/icon.svg',
+  },
   title: 'YangınRadar — Türkiye Orman Yangını Takip Sistemi',
   description:
     'Türkiye genelindeki aktif orman yangınlarını NASA FIRMS uydu verisiyle gerçek zamanlı takip edin.',
@@ -31,6 +43,13 @@ export const metadata: Metadata = {
   verification: {
     google: process.env.NEXT_PUBLIC_GSC_VERIFICATION,
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#171716',
+  colorScheme: 'dark',
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({
@@ -55,6 +74,10 @@ export default function RootLayout({
         }}
       >
         <AdSenseScript />
+        <ServiceWorkerRegister />
+        <a href="#ana-icerik" className="skip-link">
+          Ana içeriğe atla
+        </a>
         {children}
         <Footer />
       </body>

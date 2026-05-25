@@ -18,7 +18,7 @@ function formatUpdated(): string {
  */
 export default function HomePage() {
   return (
-    <main className="flex flex-col min-h-screen">
+    <main id="ana-icerik" className="flex flex-col min-h-screen">
       <Navbar updatedAt={formatUpdated()} />
       <AdLeaderboard />
       <Suspense fallback={<HomeContentSkeleton />}>

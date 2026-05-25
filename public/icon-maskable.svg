@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Maskable icon: safe zone is the center 80% (radius 205 from center 256) -->
+  <rect width="512" height="512" fill="#171716"/>
+  <g transform="translate(256 280)">
+    <path d="M -60 50 C -80 10 -50 -30 -30 -50 C -25 -10 -15 -5 0 -30 C 5 -60 20 -90 40 -110 C 35 -80 45 -50 55 -30 C 75 -10 70 30 50 50 Z"
+          fill="#EF9F27"/>
+    <path d="M -30 50 C -45 25 -25 0 -10 -15 C -5 5 5 0 15 -25 C 20 -40 30 -55 40 -65 C 35 -45 45 -25 50 -10 C 55 15 40 40 25 50 Z"
+          fill="#E24B4A"/>
+    <path d="M -15 50 C -25 30 -10 10 0 0 C 5 10 15 5 20 -10 C 25 -20 30 -25 35 -30 C 32 -15 38 -5 40 5 C 42 25 30 45 15 50 Z"
+          fill="#FFC857"/>
+  </g>
+</svg>
